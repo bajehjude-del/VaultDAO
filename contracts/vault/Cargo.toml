@@ -19,3 +19,10 @@ bridge = []
 
 [dev-dependencies]
 soroban-sdk = { version = "22.0.8", features = ["testutils"] }
+
+# Custom harness (harness = false): the meaningful metrics for a Soroban
+# contract are metered resources, not criterion-style wall-clock statistics.
+# See benches/common/mod.rs and docs/guides/BENCHMARKING.md.
+[[bench]]
+name = "contract_bench"
+harness = false

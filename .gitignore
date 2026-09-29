@@ -30,6 +30,11 @@ node_modules/
 issue.md
 PR_DESCRIPTION.md
 contracts/vault/test_snapshots/
+
+# Contract benchmark run artifacts (Issue #406). The committed baseline and the
+# dated history snapshots under benchmarks/ ARE tracked; only the per-run
+# results are not.
+benchmarks/results/
 REPUTATION_SYSTEM_COMMIT.md 
 CI_CHECKS_SUMMARY.md
 ATOMIC_BATCHING_COMMIT.md

@@ -285,3 +285,85 @@ groups:
 
       - record: job:vaultdao_events_processed:rate5m
         expr: rate(vaultdao_events_processed_total[5m])
+
+  # ======================================================================
+  # Contract benchmark regression detection (Issue #406)
+  #
+  # Primary enforcement is the CI gate in .github/workflows/benchmark.yml,
+  # which fails the build when a gated metric moves more than 5% from the
+  # committed baseline. These rules are the secondary, in-dashboard signal:
+  # they fire when Prometheus is collecting the benchmarks emitted by
+  # monitoring/contract-bench.prom, so a regression is visible on the same
+  # dashboards as the rest of the system.
+  #
+  # `delta` is measured against the previous sample, which is a weaker signal
+  # than the baseline comparison - use it to notice movement quickly, and defer
+  # to the CI gate for the authoritative verdict.
+  # ======================================================================
+  - name: vaultdao.contract_bench
+    interval: 5m
+    rules:
+      - alert: ContractGasRegression
+        expr: |
+          (
+            delta(vaultdao_contract_gas_instructions[1h]) / vaultdao_contract_gas_instructions
+          ) > 0.05
+        for: 10m
+        labels:
+          severity: warning
+          component: contracts
+        annotations:
+          summary: "Contract gas regression on {{ $labels.scenario }}"
+          description: |
+            Scenario {{ $labels.scenario }} (group {{ $labels.group }}) increased by
+            {{ $value | humanizePercentage }} over the last hour. Confirm against the
+            committed baseline with `scripts/benchmark.sh`; if the increase is
+            intentional, re-baseline.
+
+      - alert: ContractStorageWriteRegression
+        expr: |
+          (
+            delta(vaultdao_contract_storage_write_entries[1h])
+            / clamp_min(vaultdao_contract_storage_write_entries, 1)
+          ) > 0.10
+        for: 10m
+        labels:
+          severity: warning
+          component: contracts
+        annotations:
+          summary: "Extra ledger writes on {{ $labels.scenario }}"
+          description: |
+            Scenario {{ $labels.scenario }} now writes
+            {{ $value | humanize }} more ledger entries than it did an hour ago.
+            A read path that starts writing is usually an accidental state write -
+            check for a TTL bump or a cache refresh.
+
+      - alert: ContractWasmSizeRegression
+        expr: |
+          (
+            delta(vaultdao_contract_wasm_bytes{kind="raw"}[1d])
+            / clamp_min(vaultdao_contract_wasm_bytes{kind="raw"}, 1)
+          ) > 0.05
+        for: 30m
+        labels:
+          severity: warning
+          component: contracts
+        annotations:
+          summary: "Contract Wasm grew {{ $value | humanizePercentage }}"
+          description: |
+            The deployed contract grew by {{ $value | humanizePercentage }} in 24h.
+            Check `contractspecv0` separately in the dashboard: growth there means
+            the public interface changed, growth only in raw bytes means
+            implementation code was added.
+
+  - name: vaultdao.contract_bench_recording
+    interval: 5m
+    rules:
+      # Fee-equivalent instruction cost, so scenarios are comparable in the same
+      # unit a user pays in. Excludes rent, which the native test harness models
+      # unreliably.
+      - record: job:vaultdao_contract_fee_equivalent:instructions
+        expr: vaultdao_contract_gas_instructions * 25
+
+      - record: job:vaultdao_contract_gas_instructions:max
+        expr: max by (group) (vaultdao_contract_gas_instructions)

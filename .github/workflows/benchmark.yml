@@ -1,0 +1,214 @@
+name: Benchmarks
+
+# Contract performance benchmarks and regression gate (Issue #406).
+#
+# Two triggers, because they answer different questions:
+#   * pull_request - "did this change make the contract more expensive?"
+#     Path-filtered to contract and harness changes, so docs-only and frontend
+#     PRs do not pay for it.
+#   * schedule     - weekly trend capture for historical tracking, independent
+#     of whether anyone is pushing.
+#
+# The gate only fails on deterministic metered resources. Wall time is measured
+# and reported but never gated, because a shared runner's load is not a property
+# of the commit. See scripts/bench-regression.py for the gated metric list.
+
+on:
+  pull_request:
+    paths:
+      - "contracts/vault/src/**"
+      - "contracts/vault/benches/**"
+      - "contracts/vault/Cargo.toml"
+      - "scripts/benchmark.sh"
+      - "scripts/bench-regression.py"
+      - "scripts/wasm-size.py"
+      - "benchmarks/baseline.json"
+      - ".github/workflows/benchmark.yml"
+  push:
+    branches: [main]
+    paths:
+      - "contracts/vault/src/**"
+      - "contracts/vault/benches/**"
+      - "contracts/vault/Cargo.toml"
+      - "scripts/benchmark.sh"
+      - "scripts/bench-regression.py"
+      - "scripts/wasm-size.py"
+      - "benchmarks/baseline.json"
+  schedule:
+    # Mondays 04:17 UTC. Deliberately not on the hour - the top of the hour is
+    # the most contended slot on GitHub's shared scheduler.
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      threshold:
+        description: "Degradation fraction that fails the gate (e.g. 0.05)"
+        required: false
+        default: "0.05"
+      update_baseline:
+        description: "Adopt this run as the new committed baseline"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    name: Contract benchmarks
+    runs-on: ubuntu-latest
+    # Serialised on a self-hosted-style label if you add one; on GitHub-hosted
+    # runners the gate is safe to run concurrently because it only reads the
+    # committed baseline and writes to its own workspace.
+    defaults:
+      run:
+        working-directory: contracts/vault
+    env:
+      # Every gated metric is deterministic for a given commit and comes from a
+      # single invocation, so repetitions only improve the wall-time median.
+      # PRs use 3, the weekly capture uses 10.
+      VAULTDAO_BENCH_REPS: ${{ github.event_name == 'schedule' && '10' || '3' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Resolve threshold
+        id: threshold
+        run: |
+          if [ -n "${{ inputs.threshold }}" ]; then
+            echo "value=${{ inputs.threshold }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=0.05" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            contracts/vault/target
+          key: ${{ runner.os }}-bench-${{ hashFiles('contracts/vault/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-bench-
+
+      - name: Run benchmarks and regression gate
+        id: bench
+        # The orchestrator runs `cargo bench`, builds the release Wasm, measures
+        # it, and gates the result. It must be invoked from the repo root, since
+        # it resolves paths relative to its own location.
+        working-directory: .
+        env:
+          VAULTDAO_THRESHOLD: ${{ steps.threshold.outputs.value }}
+        run: |
+          set -uo pipefail
+
+          # Only scheduled/dispatched runs record history; the script writes a
+          # dated snapshot unless told otherwise, and one per PR would leave
+          # uncommitted churn in the tree.
+          history=(--no-history)
+          case "${{ github.event_name }}" in
+            schedule|workflow_dispatch) history=() ;;
+          esac
+
+          # NOTE: no `set -e` here - a regression exits 1, and the job must
+          # survive long enough to upload the report explaining why. The status
+          # is captured and re-raised as a failed step at the end.
+          if [ "${{ inputs.update_baseline }}" = "true" ]; then
+            echo "::notice::update_baseline was set; adopting this run as the baseline"
+            scripts/benchmark.sh --update "${history[@]}"
+          else
+            scripts/benchmark.sh "${history[@]}"
+          fi
+          status=$?
+
+          # Surface a missing baseline, so a fresh clone is never mistaken for
+          # a meaningful clean pass.
+          if [ ! -f benchmarks/baseline.json ]; then
+            echo "::warning::no committed baseline; one was created from this run"
+          fi
+
+          echo "gate_status=$status" >> "$GITHUB_OUTPUT"
+          exit $status
+
+      - name: Publish report to the run summary
+        if: always()
+        working-directory: .
+        run: |
+          if [ -f benchmarks/results/report.md ]; then
+            cat benchmarks/results/report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Explain a regression
+        if: steps.bench.outcome == 'failure'
+        working-directory: .
+        run: |
+          {
+            echo "## ::error::Contract benchmark regression"
+            echo
+            echo "A gated metric moved by more than ${{ steps.threshold.outputs.value }}."
+            echo
+            echo "Full table is in the run summary above. If the cost increase is"
+            echo "intentional, re-baseline locally and commit the result:"
+            echo
+            echo '```bash'
+            echo "scripts/benchmark.sh --update"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-benchmarks-${{ github.run_id }}
+          retention-days: 90
+          path: |
+            benchmarks/results/
+            benchmarks/history/
+            monitoring/contract-bench.prom
+
+  # Records the weekly run into the repository so trends survive runner expiry.
+  # Best-effort: a failure here must never fail the benchmark gate itself, since
+  # the measurement has already been published as an artifact by then.
+  record-history:
+    name: Record benchmark history
+    needs: benchmark
+    if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Download benchmark artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: contract-benchmarks-${{ github.run_id }}
+          path: artifacts
+
+      - name: Commit dated snapshot
+        run: |
+          set -euo pipefail
+          mkdir -p benchmarks/history
+          latest="$(ls -t artifacts/benchmarks/history/*.json 2>/dev/null | head -1 || true)"
+          if [ -z "$latest" ]; then
+            echo "::notice::no history snapshot in artifacts; nothing to record"
+            exit 0
+          fi
+          cp "$latest" benchmarks/history/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add benchmarks/history
+          if git diff --cached --quiet; then
+            echo "::notice::snapshot unchanged; nothing to commit"
+            exit 0
+          fi
+          git commit -m "chore(benchmarks): record $(basename "$latest")"
+          git push

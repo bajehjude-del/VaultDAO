@@ -14,9 +14,39 @@ The monitoring stack consists of:
 
 ### Dashboards
 - `grafana-dashboard.json` - Main operations dashboard with 10 panels
+- `grafana-benchmark-dashboard.json` - Contract performance dashboard with 6 panels (uid `vaultdao-contract-benchmarks`)
+
+### Metrics
+- `contract-bench.prom` - Contract benchmark metrics in Prometheus text format, regenerated on every `scripts/benchmark.sh` run
 
 ### Alerting
-- `prometheus-rules.yaml` - Prometheus recording and alerting rules
+- `prometheus-rules.yaml` - Prometheus recording and alerting rules, including contract benchmark regression alerts
+
+## Contract Benchmark Dashboard
+
+`grafana-benchmark-dashboard.json` charts the output of
+`scripts/benchmark.sh` (see [docs/guides/BENCHMARKING.md](../docs/guides/BENCHMARKING.md)).
+It expects these series, which `contract-bench.prom` provides:
+
+- `vaultdao_contract_gas_instructions{scenario, group}`
+- `vaultdao_contract_storage_read_entries{scenario, group}`
+- `vaultdao_contract_storage_write_entries{scenario, group}`
+- `vaultdao_contract_memory_bytes{scenario, group}`
+- `vaultdao_contract_wasm_bytes{kind="raw|gzip|contractspecv0"}`
+
+Point a scrape job at `contract-bench.prom`, or regenerate it before each
+collection. Note that `contract-bench.prom` is a snapshot of one commit's numbers
+rather than a live export, so use a reasonably long scrape interval and treat the
+Prometheus alerts as a secondary signal; the authoritative regression verdict
+comes from the CI gate in `.github/workflows/benchmark.yml`.
+
+Install it the same way as the operations dashboard:
+
+```bash
+curl -X POST http://localhost:3001/api/dashboards/db \
+  -H 'Content-Type: application/json' \
+  -d @grafana-benchmark-dashboard.json
+```
 
 ## Grafana Dashboard Panels
 

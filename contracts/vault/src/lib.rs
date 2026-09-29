@@ -60,6 +60,28 @@ use types_balance_snapshot::BalanceSnapshot;
 #[contract]
 pub struct VaultDAO;
 
+/// Types needed to construct a working vault from outside the crate.
+///
+/// Exists so the `benches/` harness, which compiles as a separate crate, can
+/// build a fixture without the rest of `types` becoming public API. A separate
+/// module keeps these names out of the crate root namespace, where the
+/// crate-internal `use types::{...}` block already binds them.
+///
+/// Deliberately an explicit list. Publishing the whole `types` module would
+/// widen the public Rust API far beyond what a benchmark needs, and would newly
+/// expose types that trip additional clippy lints once reachable (for example
+/// `TimeWeightedConfig::default` starts failing `should_implement_trait`).
+///
+/// ABI-neutral: the embedded contract spec is generated from `#[contractimpl]`
+/// signatures only, never from Rust module visibility.
+pub mod fixture {
+    pub use super::types::{
+        ConditionLogic, InitConfig, InsuranceConfig, Priority, ProposalStatus, RecoveryConfig,
+        RetryConfig, Role, StakingConfig, ThresholdStrategy, TransferDetails, VelocityConfig,
+        VoteWeight,
+    };
+}
+
 /// Proposal expiration: ~7 days in ledgers (5 seconds per ledger) - DEPRECATED, use ExpirationConfig
 #[allow(dead_code)]
 const PROPOSAL_EXPIRY_LEDGERS: u64 = 120_960;

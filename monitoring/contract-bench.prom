@@ -1,0 +1,101 @@
+# HELP vaultdao_contract_gas_instructions Modelled CPU instructions for one contract invocation.
+# TYPE vaultdao_contract_gas_instructions gauge
+vaultdao_contract_gas_instructions{scenario="set_role",group="single_event"} 570417
+vaultdao_contract_gas_instructions{scenario="update_threshold",group="single_event"} 625291
+vaultdao_contract_gas_instructions{scenario="batch_propose_transfers_1",group="batch_event"} 1092915
+vaultdao_contract_gas_instructions{scenario="batch_propose_transfers_5",group="batch_event"} 2021808
+vaultdao_contract_gas_instructions{scenario="batch_propose_transfers_10",group="batch_event"} 3296281
+vaultdao_contract_gas_instructions{scenario="bulk_add_to_whitelist_10",group="batch_event"} 782253
+vaultdao_contract_gas_instructions{scenario="bulk_add_to_whitelist_50",group="batch_event"} 5368338
+vaultdao_contract_gas_instructions{scenario="batch_execute_proposals_5",group="batch_event"} 6547510
+vaultdao_contract_gas_instructions{scenario="get_proposal",group="query"} 246274
+vaultdao_contract_gas_instructions{scenario="get_config",group="query"} 393853
+vaultdao_contract_gas_instructions{scenario="get_proposals_by_status_50",group="query"} 737481
+vaultdao_contract_gas_instructions{scenario="list_proposals_50",group="query"} 9690773
+vaultdao_contract_gas_instructions{scenario="get_proposals_by_ledger_range_scan60",group="query"} 3683098
+vaultdao_contract_gas_instructions{scenario="get_audit_trail_50",group="query"} 1440450
+vaultdao_contract_gas_instructions{scenario="get_metrics",group="query"} 289224
+vaultdao_contract_gas_instructions{scenario="propose_transfer",group="governance"} 1783066
+vaultdao_contract_gas_instructions{scenario="approve_proposal",group="governance"} 1051271
+vaultdao_contract_gas_instructions{scenario="execute_proposal",group="governance"} 1955430
+vaultdao_contract_gas_instructions{scenario="cancel_proposal_rejection",group="governance"} 1414792
+vaultdao_contract_gas_instructions{scenario="create_audit_checkpoint_100",group="archive"} 18219718
+vaultdao_contract_gas_instructions{scenario="verify_audit_chain_100",group="archive"} 4757798
+vaultdao_contract_gas_instructions{scenario="get_audit_checkpoint",group="archive"} 176677
+# HELP vaultdao_contract_storage_read_entries Ledger entries read per invocation.
+# TYPE vaultdao_contract_storage_read_entries gauge
+vaultdao_contract_storage_read_entries{scenario="set_role",group="single_event"} 3
+vaultdao_contract_storage_read_entries{scenario="update_threshold",group="single_event"} 3
+vaultdao_contract_storage_read_entries{scenario="batch_propose_transfers_1",group="batch_event"} 4
+vaultdao_contract_storage_read_entries{scenario="batch_propose_transfers_5",group="batch_event"} 4
+vaultdao_contract_storage_read_entries{scenario="batch_propose_transfers_10",group="batch_event"} 4
+vaultdao_contract_storage_read_entries{scenario="bulk_add_to_whitelist_10",group="batch_event"} 3
+vaultdao_contract_storage_read_entries{scenario="bulk_add_to_whitelist_50",group="batch_event"} 3
+vaultdao_contract_storage_read_entries{scenario="batch_execute_proposals_5",group="batch_event"} 10
+vaultdao_contract_storage_read_entries{scenario="get_proposal",group="query"} 3
+vaultdao_contract_storage_read_entries{scenario="get_config",group="query"} 2
+vaultdao_contract_storage_read_entries{scenario="get_proposals_by_status_50",group="query"} 52
+vaultdao_contract_storage_read_entries{scenario="list_proposals_50",group="query"} 102
+vaultdao_contract_storage_read_entries{scenario="get_proposals_by_ledger_range_scan60",group="query"} 51
+vaultdao_contract_storage_read_entries{scenario="get_audit_trail_50",group="query"} 51
+vaultdao_contract_storage_read_entries{scenario="get_metrics",group="query"} 1
+vaultdao_contract_storage_read_entries{scenario="propose_transfer",group="governance"} 5
+vaultdao_contract_storage_read_entries{scenario="approve_proposal",group="governance"} 5
+vaultdao_contract_storage_read_entries{scenario="execute_proposal",group="governance"} 8
+vaultdao_contract_storage_read_entries{scenario="cancel_proposal_rejection",group="governance"} 5
+vaultdao_contract_storage_read_entries{scenario="create_audit_checkpoint_100",group="archive"} 3
+vaultdao_contract_storage_read_entries{scenario="verify_audit_chain_100",group="archive"} 101
+vaultdao_contract_storage_read_entries{scenario="get_audit_checkpoint",group="archive"} 2
+# HELP vaultdao_contract_storage_write_entries Ledger entries written per invocation.
+# TYPE vaultdao_contract_storage_write_entries gauge
+vaultdao_contract_storage_write_entries{scenario="set_role",group="single_event"} 4
+vaultdao_contract_storage_write_entries{scenario="update_threshold",group="single_event"} 3
+vaultdao_contract_storage_write_entries{scenario="batch_propose_transfers_1",group="batch_event"} 13
+vaultdao_contract_storage_write_entries{scenario="batch_propose_transfers_5",group="batch_event"} 21
+vaultdao_contract_storage_write_entries{scenario="batch_propose_transfers_10",group="batch_event"} 31
+vaultdao_contract_storage_write_entries{scenario="bulk_add_to_whitelist_10",group="batch_event"} 12
+vaultdao_contract_storage_write_entries{scenario="bulk_add_to_whitelist_50",group="batch_event"} 52
+vaultdao_contract_storage_write_entries{scenario="batch_execute_proposals_5",group="batch_event"} 23
+vaultdao_contract_storage_write_entries{scenario="get_proposal",group="query"} 0
+vaultdao_contract_storage_write_entries{scenario="get_config",group="query"} 0
+vaultdao_contract_storage_write_entries{scenario="get_proposals_by_status_50",group="query"} 0
+vaultdao_contract_storage_write_entries{scenario="list_proposals_50",group="query"} 0
+vaultdao_contract_storage_write_entries{scenario="get_proposals_by_ledger_range_scan60",group="query"} 0
+vaultdao_contract_storage_write_entries{scenario="get_audit_trail_50",group="query"} 0
+vaultdao_contract_storage_write_entries{scenario="get_metrics",group="query"} 0
+vaultdao_contract_storage_write_entries{scenario="propose_transfer",group="governance"} 19
+vaultdao_contract_storage_write_entries{scenario="approve_proposal",group="governance"} 7
+vaultdao_contract_storage_write_entries{scenario="execute_proposal",group="governance"} 12
+vaultdao_contract_storage_write_entries{scenario="cancel_proposal_rejection",group="governance"} 13
+vaultdao_contract_storage_write_entries{scenario="create_audit_checkpoint_100",group="archive"} 103
+vaultdao_contract_storage_write_entries{scenario="verify_audit_chain_100",group="archive"} 0
+vaultdao_contract_storage_write_entries{scenario="get_audit_checkpoint",group="archive"} 0
+# HELP vaultdao_contract_memory_bytes Modelled peak memory per invocation.
+# TYPE vaultdao_contract_memory_bytes gauge
+vaultdao_contract_memory_bytes{scenario="set_role",group="single_event"} 111715
+vaultdao_contract_memory_bytes{scenario="update_threshold",group="single_event"} 112147
+vaultdao_contract_memory_bytes{scenario="batch_propose_transfers_1",group="batch_event"} 209666
+vaultdao_contract_memory_bytes{scenario="batch_propose_transfers_5",group="batch_event"} 379298
+vaultdao_contract_memory_bytes{scenario="batch_propose_transfers_10",group="batch_event"} 626978
+vaultdao_contract_memory_bytes{scenario="bulk_add_to_whitelist_10",group="batch_event"} 163802
+vaultdao_contract_memory_bytes{scenario="bulk_add_to_whitelist_50",group="batch_event"} 1192202
+vaultdao_contract_memory_bytes{scenario="batch_execute_proposals_5",group="batch_event"} 1319213
+vaultdao_contract_memory_bytes{scenario="get_proposal",group="query"} 55076
+vaultdao_contract_memory_bytes{scenario="get_config",group="query"} 65596
+vaultdao_contract_memory_bytes{scenario="get_proposals_by_status_50",group="query"} 129847
+vaultdao_contract_memory_bytes{scenario="list_proposals_50",group="query"} 2131266
+vaultdao_contract_memory_bytes{scenario="get_proposals_by_ledger_range_scan60",group="query"} 398675
+vaultdao_contract_memory_bytes{scenario="get_audit_trail_50",group="query"} 201576
+vaultdao_contract_memory_bytes{scenario="get_metrics",group="query"} 57977
+vaultdao_contract_memory_bytes{scenario="propose_transfer",group="governance"} 333136
+vaultdao_contract_memory_bytes{scenario="approve_proposal",group="governance"} 204397
+vaultdao_contract_memory_bytes{scenario="execute_proposal",group="governance"} 355567
+vaultdao_contract_memory_bytes{scenario="cancel_proposal_rejection",group="governance"} 263087
+vaultdao_contract_memory_bytes{scenario="create_audit_checkpoint_100",group="archive"} 5809288
+vaultdao_contract_memory_bytes{scenario="verify_audit_chain_100",group="archive"} 539629
+vaultdao_contract_memory_bytes{scenario="get_audit_checkpoint",group="archive"} 82904
+# HELP vaultdao_contract_wasm_bytes Deployed contract size.
+# TYPE vaultdao_contract_wasm_bytes gauge
+vaultdao_contract_wasm_bytes{kind="raw"} 894011
+vaultdao_contract_wasm_bytes{kind="gzip"} 231188
+vaultdao_contract_wasm_bytes{kind="contractspecv0"} 182020
